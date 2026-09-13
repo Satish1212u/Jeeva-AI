@@ -74,6 +74,6 @@ describe('SafetyEngine - Medical Guardrails & Emergency Detection', () => {
   it('postProcessResponse should append educational disclaimer if absent', () => {
     const input = 'Vitamin D is synthesized when skin is exposed to sunlight.';
     const processed = SafetyEngine.postProcessResponse(input, 'en');
-    expect(processed.sanitizedText).toContain('MedAI is an AI educational assistant');
+    expect(processed.sanitizedText).toContain('Jeeva AI is an AI health assistant');
   });
 });

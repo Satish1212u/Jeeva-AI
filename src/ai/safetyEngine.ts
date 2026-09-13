@@ -16,7 +16,7 @@ export interface PostProcessResult {
 }
 
 /**
- * Dedicated Safety Engine for MedAI
+ * Dedicated Safety Engine for Jeeva AI
  * Separate from LLM prompts to guarantee deterministic protection.
  */
 export class SafetyEngine {
@@ -171,7 +171,7 @@ export class SafetyEngine {
 
     // 4. Ensure disclaimer is present
     const disclaimer = DISCLAIMERS[lang] || DISCLAIMERS.en;
-    if (!sanitizedText.includes('MedAI is an AI') && !sanitizedText.includes('MedAI एक AI') && !sanitizedText.includes('MedAI ek AI')) {
+    if (!sanitizedText.includes('Jeeva AI is an AI') && !sanitizedText.includes('Jeeva AI एक AI') && !sanitizedText.includes('Jeeva AI ek AI')) {
       sanitizedText += disclaimer;
     }
 

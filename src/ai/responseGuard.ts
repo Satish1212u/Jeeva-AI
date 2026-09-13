@@ -54,7 +54,7 @@ export class ResponseGuard {
   public static guard(rawOutput: string, lang: SupportedLanguage = 'en'): GuardResult {
     if (!rawOutput || typeof rawOutput !== 'string') {
       return {
-        content: 'MedAI was unable to generate a safe response. Please consult a healthcare professional.',
+        content: 'Jeeva AI was unable to generate a safe response. Please consult a healthcare professional.',
         isSanitized: true,
         violations: ['EMPTY_OR_INVALID_OUTPUT']
       };

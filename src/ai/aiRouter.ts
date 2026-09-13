@@ -53,7 +53,7 @@ export class AIRouter {
     // Simple greetings and light conversational questions
     const greetingPatterns = [
       /^(hi|hello|hey|namaste|good (morning|evening|afternoon)|hola)\b/i,
-      /^(how are you|kaise ho|who are you|what is medai|help)\b/i,
+      /^(how are you|kaise ho|who are you|what is medai|what is jeeva ai|help)\b/i,
       /^(ok|thanks|thank you|shukriya|theek hai)\b/i
     ];
 
@@ -295,12 +295,12 @@ export class AIRouter {
 
   private getFallbackErrorMessage(lang: SupportedLanguage): string {
     if (lang === 'hi') {
-      return `⚠️ MedAI सेवाएँ वर्तमान में अत्यधिक लोड या प्रदाता समस्या का सामना कर रही हैं।\n\nकृपया कुछ क्षण बाद पुनः प्रयास करें। यदि आपको कोई गंभीर लक्षण है, तो कृपया तुरंत किसी योग्य डॉक्टर से संपर्क करें या आपातकालीन 112 डायल करें।`;
+      return `⚠️ Jeeva AI सेवाएँ वर्तमान में अत्यधिक लोड या प्रदाता समस्या का सामना कर रही हैं।\n\nकृपया कुछ क्षण बाद पुनः प्रयास करें। यदि आपको कोई गंभीर लक्षण है, तो कृपया तुरंत किसी योग्य डॉक्टर से संपर्क करें या आपातकालीन 112 डायल करें।`;
     }
     if (lang === 'hinglish') {
-      return `⚠️ MedAI servers abhi high traffic face kar rahe hain.\n\nKripya thodi der baad dobara try karein. Agar aapko severe symptoms hain to turant doctor se consult karein ya 112 par call karein.`;
+      return `⚠️ Jeeva AI servers abhi high traffic face kar rahe hain.\n\nKripya thodi der baad dobara try karein. Agar aapko severe symptoms hain to turant doctor se consult karein ya 112 par call karein.`;
     }
-    return `⚠️ MedAI is currently experiencing high demand or temporary connectivity limitations across all AI providers.\n\nPlease try your query again in a moment. For any urgent health concerns, please consult a medical practitioner or contact emergency services immediately.`;
+    return `⚠️ Jeeva AI is currently experiencing high demand or temporary connectivity limitations across all AI providers.\n\nPlease try your query again in a moment. For any urgent health concerns, please consult a medical practitioner or contact emergency services immediately.`;
   }
 }
 

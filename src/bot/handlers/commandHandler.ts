@@ -18,7 +18,7 @@ export class CommandHandler {
 
     await UserService.recordConsent(userMeta.id, 'TERMS_AND_DISCLAIMER');
 
-    const welcomeText = `Welcome to *MedAI* 🩺
+    const welcomeText = `Welcome to **Jeeva AI** 🩺
 
 I can help you:
 • understand health questions
@@ -27,7 +27,7 @@ I can help you:
 • understand medicines
 • organize health information
 
-⚠️ *MedAI is an AI health assistant and does not replace a qualified doctor or emergency service.*`;
+⚠️ **Jeeva AI is an AI health assistant and does not replace a qualified doctor or emergency service.**`;
 
     await telegramBot.sendMessage({
       chat_id: chatId,
@@ -40,7 +40,7 @@ I can help you:
    * Handle /help command
    */
   public static async handleHelp(chatId: number) {
-    const helpText = `📖 *MedAI Quick User Guide*
+    const helpText = `📖 *Jeeva AI Quick User Guide*
 
 *What You Can Do:*
 1. 💬 *Chat with AI*: Simply type any health or symptom question in English, Hindi, or Hinglish.
@@ -70,13 +70,13 @@ I can help you:
    * Handle /privacy command
    */
   public static async handlePrivacy(chatId: number) {
-    const privacyText = `🔒 *MedAI Privacy & Data Policy*
+    const privacyText = `🔒 *Jeeva AI Privacy & Data Policy*
 
 • *Data Protection*: Your health queries and uploaded documents are encrypted and treated with strict confidentiality.
 • *AI Safety*: We do not sell your health data or share personal identifiable information with advertisers.
 • *Document Retention*: Sensitive medical files are processed solely for clinical report extraction and stored securely.
 • *Right to Erasure*: You can wipe all your data at any time by sending \`/reset\`.
-• *Medical Disclaimer*: MedAI is an educational decision-support tool, not an authorized medical provider.`;
+• *Medical Disclaimer*: Jeeva AI is an educational decision-support tool, not an authorized medical provider.`;
 
     await telegramBot.sendMessage({
       chat_id: chatId,
@@ -125,7 +125,7 @@ _Select a profile below to switch patient context:_`;
 
     const resetText = `🗑️ *All Personal Data Wiped*
 
-Your conversation history, family profiles, uploaded documents, and lab records have been completely deleted from MedAI.
+Your conversation history, family profiles, uploaded documents, and lab records have been completely deleted from Jeeva AI.
 
 Send /start whenever you wish to begin again.`;
 
@@ -203,7 +203,7 @@ Send /start whenever you wish to begin again.`;
 To compare two lab reports:
 1. Upload your *older report* (Photo or PDF).
 2. Upload your *newer report*.
-3. MedAI will automatically match overlapping parameters (e.g. Hemoglobin, Sugar, Cholesterol, Creatinine) and chart whether values increased, decreased, normalized, or became newly abnormal.`;
+3. Jeeva AI will automatically match overlapping parameters (e.g. Hemoglobin, Sugar, Cholesterol, Creatinine) and chart whether values increased, decreased, normalized, or became newly abnormal.`;
 
     await telegramBot.sendMessage({
       chat_id: chatId,

@@ -65,7 +65,7 @@ export class CallbackHandler {
       if (data === 'profile:add_member') {
         await telegramBot.sendMessage({
           chat_id: chatId,
-          text: `➕ *Add a Family Member*\n\nTo add a family member, send a message formatted like:\n\n\`Add Father: Ramesh, 58 yrs, B+, Diabetes\`\nor\n\`Add Child: Aarav, 6 yrs, Asthma\`\n\nMedAI will automatically create their isolated medical profile.`
+          text: `➕ *Add a Family Member*\n\nTo add a family member, send a message formatted like:\n\n\`Add Father: Ramesh, 58 yrs, B+, Diabetes\`\nor\n\`Add Child: Aarav, 6 yrs, Asthma\`\n\nJeeva AI will automatically create their isolated medical profile.`
         });
         return;
       }
@@ -75,28 +75,28 @@ export class CallbackHandler {
         case 'action:ask_question':
           await telegramBot.sendMessage({
             chat_id: chatId,
-            text: `💬 *Ask Any Health Question*\n\nFeel free to describe what you or your family member are experiencing:\n• "Mera sugar level 140 fasting aaya hai, kya ye normal hai?"\n• "I have had a mild headache and dry cough for 2 days."\n• "What foods should I avoid with high uric acid?"\n\nMedAI provides clear, cautious explanations.`
+            text: `💬 *Ask Any Health Question*\n\nFeel free to describe what you or your family member are experiencing:\n• "Mera sugar level 140 fasting aaya hai, kya ye normal hai?"\n• "I have had a mild headache and dry cough for 2 days."\n• "What foods should I avoid with high uric acid?"\n\nJeeva AI provides clear, cautious explanations.`
           });
           break;
 
         case 'action:upload_report':
           await telegramBot.sendMessage({
             chat_id: chatId,
-            text: `📋 *Upload Lab Report*\n\nPlease upload a photo (JPG/PNG) or document (PDF) of your laboratory report.\n\nMedAI will extract parameters (Hb, Sugar, Thyroid, LFT, KFT, Lipids) and explain what high or low markers mean in plain terms.`
+            text: `📋 *Upload Lab Report*\n\nPlease upload a photo (JPG/PNG) or document (PDF) of your laboratory report.\n\nJeeva AI will extract parameters (Hb, Sugar, Thyroid, LFT, KFT, Lipids) and explain what high or low markers mean in plain terms.`
           });
           break;
 
         case 'action:prescription':
           await telegramBot.sendMessage({
             chat_id: chatId,
-            text: `📝 *Prescription Reader*\n\nPlease take a clear photo of your prescription and send it here.\n\nMedAI will detect medicine names, strengths, dosage frequencies, and duration, flagging any unclear handwriting for verification with your pharmacist.`
+            text: `📝 *Prescription Reader*\n\nPlease take a clear photo of your prescription and send it here.\n\nJeeva AI will detect medicine names, strengths, dosage frequencies, and duration, flagging any unclear handwriting for verification with your pharmacist.`
           });
           break;
 
         case 'action:medicine_info':
           await telegramBot.sendMessage({
             chat_id: chatId,
-            text: `💊 *Medicine Information Lookup*\n\nType any brand or generic medicine name (e.g. *Dolo 650*, *Metformin 500*, *Pantocid 40*, *Azithral*).\n\nMedAI will return dosage strength, composition, verified package images, uses, side effects, precautions, and interaction warnings.`
+            text: `💊 *Medicine Information Lookup*\n\nType any brand or generic medicine name (e.g. *Dolo 650*, *Metformin 500*, *Pantocid 40*, *Azithral*).\n\nJeeva AI will return dosage strength, composition, verified package images, uses, side effects, precautions, and interaction warnings.`
           });
           break;
 
@@ -119,7 +119,7 @@ export class CallbackHandler {
         case 'action:back_to_menu':
           await telegramBot.sendMessage({
             chat_id: chatId,
-            text: `*MedAI Main Menu* 🩺`,
+            text: `*Jeeva AI Main Menu* 🩺`,
             reply_markup: InlineKeyboards.mainMenu()
           });
           break;

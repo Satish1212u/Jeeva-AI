@@ -89,7 +89,7 @@ export const EMERGENCY_MESSAGES: Record<SupportedLanguage, string> = {
  * Standard safety disclaimers per language
  */
 export const DISCLAIMERS: Record<SupportedLanguage, string> = {
-  en: '\n\n⚠️ _MedAI is an AI educational assistant and does not replace professional medical evaluation, diagnosis, or treatment. Always consult a qualified physician._',
-  hi: '\n\n⚠️ _MedAI एक AI स्वास्थ्य सूचना सहायक है और यह डॉक्टर की सलाह, जांच या उपचार का विकल्प नहीं है। किसी भी स्वास्थ्य निर्णय के लिए योग्य चिकित्सक से परामर्श करें।_',
-  hinglish: '\n\n⚠️ _MedAI ek AI health assistant hai aur ye certified doctor ki advice, diagnosis ya treatment ka replacement nahi hai. Hamesha kisi qualified doctor se consult karein._'
+  en: '\n\n⚠️ _Jeeva AI is an AI health assistant and does not replace professional medical evaluation, diagnosis, or treatment. Always consult a qualified physician._',
+  hi: '\n\n⚠️ _Jeeva AI एक AI स्वास्थ्य सूचना सहायक है और यह डॉक्टर की सलाह, जांच या उपचार का विकल्प नहीं है। किसी भी स्वास्थ्य निर्णय के लिए योग्य चिकित्सक से परामर्श करें।_',
+  hinglish: '\n\n⚠️ _Jeeva AI ek AI health assistant hai aur ye certified doctor ki advice, diagnosis ya treatment ka replacement nahi hai. Hamesha kisi qualified doctor se consult karein._'
 };

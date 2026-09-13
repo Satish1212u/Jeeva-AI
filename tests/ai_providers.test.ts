@@ -68,7 +68,7 @@ describe('AI Provider Layer & AIRouter', () => {
       expect(res.content).not.toContain('As your doctor');
       expect(res.content).toContain('As an AI health assistant');
       expect(res.content).toContain('fasting blood sugar above 100');
-      expect(res.content).toContain('MedAI is an AI educational assistant');
+      expect(res.content).toContain('Jeeva AI is an AI health assistant');
     });
 
     it('should soften definitive clinical imaging diagnostic certainty', () => {
@@ -255,7 +255,7 @@ describe('AI Provider Layer & AIRouter', () => {
 
       expect(result.providerUsed).toBe('fallback-system');
       expect(result.fallbackUsed).toBe(true);
-      expect(result.guardResult.content).toContain('MedAI is currently experiencing high demand');
+      expect(result.guardResult.content).toContain('Jeeva AI is currently experiencing high demand');
       expect(result.guardResult.content).toContain('consult a medical practitioner');
     });
   });

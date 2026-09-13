@@ -30,7 +30,7 @@ describe('Resilience, Fallbacks & Error Boundaries', () => {
   it('normal AI response executes, manages indicator lifecycle, and sends answer', async () => {
     const sendMessageSpy = vi.spyOn(telegramBot, 'sendMessage').mockResolvedValue(true);
     vi.spyOn(aiRouter, 'execute').mockResolvedValueOnce({
-      response: { content: 'Blood pressure ranges are typically 120/80 mmHg.', provider: 'gemini-flash', model: 'gemini' },
+      response: { content: 'Blood pressure ranges are typically 120/80 mmHg.', provider: 'gemini-flash', model: 'gemini', latencyMs: 100 },
       guardResult: { content: 'Blood pressure ranges are typically 120/80 mmHg.', isSanitized: false, violations: [] },
       providerUsed: 'gemini-flash',
       fallbackUsed: false,
@@ -165,7 +165,8 @@ describe('Resilience, Fallbacks & Error Boundaries', () => {
       generateText: async () => ({
         content: '   \n  ', // Whitespace only
         provider: 'gemini-flash',
-        model: 'gemini-2.5-flash'
+        model: 'gemini-2.5-flash',
+        latencyMs: 50
       })
     };
 
@@ -176,7 +177,8 @@ describe('Resilience, Fallbacks & Error Boundaries', () => {
       generateText: async () => ({
         content: 'Grok non-empty valid response.',
         provider: 'grok',
-        model: 'grok-4.6'
+        model: 'grok-4.6',
+        latencyMs: 100
       })
     };
 
@@ -201,7 +203,7 @@ describe('Resilience, Fallbacks & Error Boundaries', () => {
 
     // Mock AI router to return a valid message
     vi.spyOn(aiRouter, 'execute').mockResolvedValueOnce({
-      response: { content: 'AI generated health answer.', provider: 'gemini-flash', model: 'gemini' },
+      response: { content: 'AI generated health answer.', provider: 'gemini-flash', model: 'gemini', latencyMs: 100 },
       guardResult: { content: 'AI generated health answer.', isSanitized: false, violations: [] },
       providerUsed: 'gemini-flash',
       fallbackUsed: false,
@@ -302,7 +304,7 @@ describe('Resilience, Fallbacks & Error Boundaries', () => {
   it('cleans up processing indicator on successful query', async () => {
     vi.spyOn(telegramBot, 'sendMessage').mockResolvedValue(true);
     vi.spyOn(aiRouter, 'execute').mockResolvedValueOnce({
-      response: { content: 'CBC test explanation.', provider: 'gemini-flash', model: 'gemini' },
+      response: { content: 'CBC test explanation.', provider: 'gemini-flash', model: 'gemini', latencyMs: 100 },
       guardResult: { content: 'CBC test explanation.', isSanitized: false, violations: [] },
       providerUsed: 'gemini-flash',
       fallbackUsed: false,

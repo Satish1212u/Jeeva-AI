@@ -1,10 +1,10 @@
-# MedAI 🩺 — Production-Ready Telegram AI Medical Assistant
+# Jeeva AI 🩺 — Production-Ready Telegram AI Medical Assistant
 
-MedAI is a production-grade Telegram AI medical information and clinical decision-support assistant built with Node.js, TypeScript, Express, Prisma ORM (PostgreSQL), and OpenAI.
+Jeeva AI is a production-grade Telegram AI medical information and clinical decision-support assistant built with Node.js, TypeScript, Express, Prisma ORM (PostgreSQL), and multi-provider AI.
 
-MedAI helps users understand symptoms, demystify complex lab reports, transcribe and verify prescriptions, look up verified medicine intelligence, manage family health records, and compile structured doctor-ready briefings.
+Jeeva AI helps users understand symptoms, demystify complex lab reports, transcribe and verify prescriptions, look up verified medicine intelligence, manage family health records, and compile structured doctor-ready briefings.
 
-> ⚠️ **CRITICAL MEDICAL DISCLAIMER**: MedAI is strictly an educational decision-support assistant and **NOT** a certified medical doctor. It does not provide definitive diagnoses, alter medication dosages, or recommend stopping prescribed treatments. Always consult a qualified physician for clinical care, or dial **112** (India) / **911** (US) for emergencies.
+> ⚠️ **CRITICAL MEDICAL DISCLAIMER**: Jeeva AI is strictly an educational decision-support assistant and **NOT** a certified medical doctor. It does not provide definitive diagnoses, alter medication dosages, or recommend stopping prescribed treatments. Always consult a qualified physician for clinical care, or dial **112** (India) / **911** (US) for emergencies.
 
 ---
 
@@ -233,7 +233,7 @@ medlens.ai/
 
 ## 🗄️ Database Setup & Migrations
 
-MedAI utilizes Prisma ORM with PostgreSQL. The schema includes:
+Jeeva AI utilizes Prisma ORM with PostgreSQL. The schema includes:
 * `User`: Telegram ID (unique indexed), display name, preferred language, active family profile.
 * `FamilyProfile`: Family member profiles (`SELF`, `FATHER`, `MOTHER`, `SPOUSE`, `CHILD`, `SIBLING`, `OTHER`) with allergies and pre-existing conditions.
 * `Conversation`: Chat sessions bound to users and family members.
@@ -255,12 +255,12 @@ npx prisma migrate dev --name init
 
 1. Open Telegram and search for `@BotFather`.
 2. Start chat and type `/newbot`.
-3. Choose a display name (e.g. `MedAI Assistant`) and a unique username (e.g. `medai_health_bot`).
+3. Choose a display name (e.g. `Jeeva AI Assistant`) and a unique username (e.g. `jeeva_health_bot`).
 4. Copy the generated **HTTP API Token** and set it as `TELEGRAM_BOT_TOKEN` in your `.env`.
 5. Set bot commands by sending `/setcommands` to `@BotFather`:
    ```
    start - Welcome and main menu
-   help - How to use MedAI
+   help - How to use Jeeva AI
    profile - Manage personal and family health profiles
    summary - Generate doctor-ready consultation briefing
    compare - Compare older and newer lab reports
@@ -293,7 +293,7 @@ curl https://api.telegram.org/botYOUR_TELEGRAM_BOT_TOKEN/getWebhookInfo
 
 ### Deploy to Render
 
-MedAI includes a ready-to-use `render.yaml` blueprint:
+Jeeva AI includes a ready-to-use `render.yaml` blueprint:
 
 1. Push your repository to GitHub or GitLab.
 2. In Render Dashboard, click **New +** → **Blueprint**.
@@ -309,7 +309,7 @@ MedAI includes a ready-to-use `render.yaml` blueprint:
 
 ### Deploy to Vercel
 
-MedAI includes native serverless support via `api/index.ts` and `vercel.json`:
+Jeeva AI includes native serverless support via `api/index.ts` and `vercel.json`:
 
 1. Install Vercel CLI or link through the Vercel Web Dashboard:
    ```bash

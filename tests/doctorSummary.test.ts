@@ -24,7 +24,7 @@ describe('DoctorSummaryService', () => {
       ]
     });
 
-    expect(summary).toContain('MEDAI CLINICAL VISIT BRIEFING');
+    expect(summary).toContain('JEEVA AI CLINICAL VISIT BRIEFING');
     expect(summary).toContain('Ramesh Sharma');
     expect(summary).toContain('Type 2 Diabetes');
     expect(summary).toContain('Metformin 500mg');

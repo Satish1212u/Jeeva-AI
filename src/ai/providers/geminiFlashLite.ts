@@ -147,7 +147,7 @@ export class GeminiFlashLiteProvider implements AIProvider {
   private generateSimulatedResponse(input: AIRequest): string {
     const clean = input.prompt.toLowerCase();
     if (clean.includes('namaste') || clean.includes('hello') || clean.includes('hi')) {
-      return 'Namaste! How can MedAI assist you with your health questions today?';
+      return 'Namaste! How can Jeeva AI assist you with your health questions today?';
     }
     return `Thank you for reaching out. Based on your inquiry "${input.prompt}", please ensure you monitor your symptoms and consult a certified healthcare professional for detailed medical evaluation.`;
   }

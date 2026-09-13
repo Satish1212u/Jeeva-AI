@@ -26,7 +26,7 @@ export class DoctorSummaryService {
    * Generates a clean, structured doctor-ready clinical briefing.
    */
   public static generateSummary(input: DoctorSummaryInput, _lang: SupportedLanguage = 'en'): string {
-    const header = `🩺 *MEDAI CLINICAL VISIT BRIEFING*\n_Doctor-Ready Consultation Summary_`;
+    const header = `🩺 *JEEVA AI CLINICAL VISIT BRIEFING*\n_Doctor-Ready Consultation Summary_`;
     const dateStr = new Date().toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'short',

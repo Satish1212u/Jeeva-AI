@@ -15,7 +15,7 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, () => {
-    logger.info(`MedAI server running on port ${PORT} [${env.NODE_ENV}]`);
+    logger.info(`Jeeva AI server running on port ${PORT} [${env.NODE_ENV}]`);
     logger.info(`Webhook endpoint ready at: POST /webhook/telegram`);
     logger.info(`Health check available at: GET /health`);
   });
@@ -33,6 +33,6 @@ async function startServer() {
 }
 
 startServer().catch((err) => {
-  logger.fatal({ err }, 'Failed to start MedAI server.');
+  logger.fatal({ err }, 'Failed to start Jeeva AI server.');
   process.exit(1);
 });

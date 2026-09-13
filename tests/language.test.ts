@@ -70,8 +70,8 @@ describe('Language Utilities', () => {
   });
 
   it('should have disclaimers defined for all supported languages', () => {
-    expect(DISCLAIMERS.en).toContain('MedAI is an AI educational assistant');
-    expect(DISCLAIMERS.hi).toContain('MedAI एक AI');
-    expect(DISCLAIMERS.hinglish).toContain('MedAI ek AI');
+    expect(DISCLAIMERS.en).toContain('Jeeva AI is an AI health assistant');
+    expect(DISCLAIMERS.hi).toContain('Jeeva AI एक AI');
+    expect(DISCLAIMERS.hinglish).toContain('Jeeva AI ek AI');
   });
 });

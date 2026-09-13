@@ -22,7 +22,7 @@ export class OpenRouterProvider implements AIProvider {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
           'HTTP-Referer': env.APP_URL || 'https://medai.local',
-          'X-Title': 'MedAI Medical Assistant'
+          'X-Title': 'Jeeva AI Medical Assistant'
         }
       });
     }
