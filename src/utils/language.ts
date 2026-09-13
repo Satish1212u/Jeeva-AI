@@ -2,39 +2,78 @@ export type SupportedLanguage = 'en' | 'hi' | 'hinglish';
 
 const DEVANAGARI_REGEX = /[\u0900-\u097F]/;
 
-const HINGLISH_KEYWORDS = [
-  'mera', 'meri', 'mere', 'mujhe', 'humko', 'kya', 'hai', 'hain', 'kaise', 'karo',
-  'batao', 'dard', 'khansi', 'bukhar', 'pet', 'sar', 'dawa', 'dawakhana', 'ilaj',
-  'karna', 'chahiye', 'report', 'dikhao', 'kripya', 'namaste', 'shukriya', 'theek',
-  'sugar', 'bp', 'kam', 'jyada', 'zyada', 'khoon', 'saans', 'chhati', 'doctor'
-];
+const HINGLISH_STRONG_KEYWORDS = new Set([
+  'mera', 'meri', 'mere', 'mujhe', 'humko', 'kya', 'hai', 'hain', 'ho', 'hoon',
+  'karo', 'karu', 'karein', 'karna', 'karke', 'kiya', 'chahiye', 'samjhao', 'samjha',
+  'samjhado', 'samajh', 'batao', 'bataiye', 'dikhao', 'dikhaun', 'dikhaye', 'dikhaiye',
+  'ye', 'yeh', 'wo', 'woh', 'kaise', 'kaisa', 'kaisi', 'kyu', 'kyun', 'kab', 'kahan',
+  'kidhar', 'kitna', 'kitni', 'kitne', 'dard', 'khansi', 'bukhar', 'pet', 'sar',
+  'seene', 'seena', 'gale', 'gala', 'dawa', 'dawai', 'dawakhana', 'ilaj', 'kripya',
+  'namaste', 'shukriya', 'theek', 'thik', 'kam', 'jyada', 'zyada', 'bahut', 'bohot',
+  'khoon', 'saans', 'chhati', 'haan', 'nahi', 'nahin', 'matlab', 'iska', 'iski',
+  'iske', 'usko', 'unko', 'apne', 'apna', 'apni', 'hota', 'hoti', 'hote', 'raha',
+  'rahi', 'rahe', 'gaya', 'gayi', 'gaye', 'lag', 'laga', 'lagi', 'lagta', 'lagti',
+  'bhi', 'kisi', 'accha', 'achha', 'acchi', 'achhi', 'ko'
+]);
+
+export interface LanguageDetectionResult {
+  language: SupportedLanguage;
+  isConfident: boolean;
+}
+
+/**
+ * Detect language with confidence score:
+ * - 'hi': Devanagari script
+ * - 'hinglish': Roman script with strong Hindi lexical signals
+ * - 'en': Standard English or Latin script without Hindi markers
+ */
+export function detectLanguageWithConfidence(text: string): LanguageDetectionResult {
+  if (!text || typeof text !== 'string') {
+    return { language: 'en', isConfident: false };
+  }
+
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return { language: 'en', isConfident: false };
+  }
+
+  // 1. Devanagari script detection -> Hindi
+  if (DEVANAGARI_REGEX.test(trimmed)) {
+    return { language: 'hi', isConfident: true };
+  }
+
+  // 2. Tokenize Latin words (alphabetic only)
+  const words = trimmed.toLowerCase().match(/[a-z]+/g) || [];
+  if (words.length === 0) {
+    return { language: 'en', isConfident: false };
+  }
+
+  let hinglishHits = 0;
+  for (const word of words) {
+    if (HINGLISH_STRONG_KEYWORDS.has(word)) {
+      hinglishHits++;
+    }
+  }
+
+  // Short message (<= 3 words): 1 strong Hinglish word is sufficient
+  if (words.length <= 3 && hinglishHits >= 1) {
+    return { language: 'hinglish', isConfident: true };
+  }
+
+  // Longer message (> 3 words): at least 2 keywords or >= 15% lexical density
+  if (hinglishHits >= 2 || (words.length > 0 && (hinglishHits / words.length) >= 0.15)) {
+    return { language: 'hinglish', isConfident: true };
+  }
+
+  // Normal Latin-script message
+  return { language: 'en', isConfident: true };
+}
 
 /**
  * Detect language: 'hi' (Devanagari script), 'hinglish' (Latin characters with Hindi words), or 'en'.
  */
 export function detectLanguage(text: string): SupportedLanguage {
-  if (!text || typeof text !== 'string') return 'en';
-
-  if (DEVANAGARI_REGEX.test(text)) {
-    return 'hi';
-  }
-
-  const cleanText = text.toLowerCase();
-  const words = cleanText.split(/[\s,?.!;:()"-]+/);
-
-  let hinglishCount = 0;
-  for (const word of words) {
-    if (HINGLISH_KEYWORDS.includes(word)) {
-      hinglishCount++;
-    }
-  }
-
-  // If at least 2 Hinglish keywords or >= 20% of tokens match
-  if (hinglishCount >= 2 || (words.length > 0 && hinglishCount / words.length >= 0.2)) {
-    return 'hinglish';
-  }
-
-  return 'en';
+  return detectLanguageWithConfidence(text).language;
 }
 
 /**

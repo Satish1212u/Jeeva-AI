@@ -10,6 +10,45 @@ export interface GuardResult {
 
 export class ResponseGuard {
   /**
+   * Lightweight heuristic to validate that response language broadly matches the expected language.
+   */
+  public static validateLanguageMatch(content: string, expectedLang: SupportedLanguage): boolean {
+    if (!content || typeof content !== 'string') return false;
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+
+    // Count Devanagari characters and Latin characters
+    const devanagariChars = (trimmed.match(/[\u0900-\u097F]/g) || []).length;
+    const latinChars = (trimmed.match(/[a-zA-Z]/g) || []).length;
+
+    if (expectedLang === 'hi') {
+      // Expected Hindi: Response should primarily use Devanagari
+      if (trimmed.length > 20) {
+        return devanagariChars >= 10 || devanagariChars > latinChars * 0.2;
+      }
+      return devanagariChars > 0;
+    }
+
+    if (expectedLang === 'hinglish') {
+      // Expected Hinglish: Response should primarily use Roman script, NOT full Devanagari
+      if (devanagariChars > 15 && devanagariChars > latinChars * 0.2) {
+        return false;
+      }
+      return latinChars > 0;
+    }
+
+    if (expectedLang === 'en') {
+      // Expected English: Response should primarily be English in Roman script, NO Devanagari
+      if (devanagariChars > 15 && devanagariChars > latinChars * 0.2) {
+        return false;
+      }
+      return latinChars > 0;
+    }
+
+    return true;
+  }
+
+  /**
    * Sanitizes and validates AI provider output before it can reach the Telegram user.
    */
   public static guard(rawOutput: string, lang: SupportedLanguage = 'en'): GuardResult {

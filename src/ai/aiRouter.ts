@@ -125,7 +125,7 @@ export class AIRouter {
             (requestType === 'image_request' || requestType === 'document_request') &&
             !!currentProvider.generateVision;
 
-          const response = isVision
+          let response = isVision
             ? await currentProvider.generateVision!(request)
             : await currentProvider.generateText(request);
 
@@ -133,6 +133,42 @@ export class AIRouter {
           // treat it as provider failure and continue fallback cascade
           if (!response || typeof response.content !== 'string' || !response.content.trim()) {
             throw new Error(`Provider ${currentProvider.name} returned an empty or invalid response.`);
+          }
+
+          // Validate language match
+          const isLangMatch = ResponseGuard.validateLanguageMatch(response.content, lang);
+          if (!isLangMatch) {
+            logger.warn(
+              { provider: currentProvider.name, expectedLang: lang },
+              'Response language mismatch detected. Retrying once with explicit language instruction.'
+            );
+
+            // Retry once with explicit language reinforcement instruction
+            const langName =
+              lang === 'hi' ? 'Hindi (Devanagari script)' : lang === 'hinglish' ? 'Hinglish (Roman Hindi)' : 'English';
+            const reinforcedPrompt = `${request.prompt}\n\n[CRITICAL INSTRUCTION: You MUST respond ENTIRELY in ${langName}]`;
+
+            const retryRequest: AIRequest = {
+              ...request,
+              prompt: reinforcedPrompt
+            };
+
+            const retryResponse = isVision
+              ? await currentProvider.generateVision!(retryRequest)
+              : await currentProvider.generateText(retryRequest);
+
+            if (
+              retryResponse &&
+              typeof retryResponse.content === 'string' &&
+              retryResponse.content.trim() &&
+              ResponseGuard.validateLanguageMatch(retryResponse.content, lang)
+            ) {
+              response = retryResponse;
+            } else {
+              throw new Error(
+                `Provider ${currentProvider.name} response language did not match expected language ${lang}.`
+              );
+            }
           }
 
           const latencyMs = Date.now() - startTime;

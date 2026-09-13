@@ -27,7 +27,7 @@ export class SafetyEngine {
   }> = [
     {
       type: 'CARDIAC',
-      regex: /\b(chest pain|crushing pain|radiating to (arm|jaw|back)|heart attack|chhati me dard|chhati me jalan aur dard|dil ka daura)\b|सीने में( भयानक| तेज)? दर्द|दिल का दौरा/i
+      regex: /\b(chest pain|crushing pain|radiating to (arm|jaw|back)|heart attack|chhati me(in)? dard|chhati me(in)? jalan aur dard|dil ka daura|seene me(in)? (bahut |tez )?dard)\b|सीने में( भयानक| तेज| बहुत)? दर्द|दिल का दौरा/i
     },
     {
       type: 'RESPIRATORY',
@@ -78,7 +78,8 @@ export class SafetyEngine {
    * Evaluates user input for immediate emergency red flags before sending to LLM.
    */
   public static evaluateInput(userInput: string, preferredLang?: SupportedLanguage): SafetyCheckResult {
-    const lang = preferredLang || detectLanguage(userInput);
+    const detected = detectLanguage(userInput);
+    const lang = detected || preferredLang || 'en';
     const flaggedKeywords: string[] = [];
     const safetyWarnings: string[] = [];
 

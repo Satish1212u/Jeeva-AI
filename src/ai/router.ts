@@ -21,7 +21,7 @@ export interface RouteDecision {
 
 export class IntentRouter {
   public static route(text: string, preferredLanguage?: SupportedLanguage): RouteDecision {
-    const language = preferredLanguage || detectLanguage(text);
+    const language = detectLanguage(text) || preferredLanguage || 'en';
 
     // 1. Check for emergency first
     const safety = SafetyEngine.evaluateInput(text, language);

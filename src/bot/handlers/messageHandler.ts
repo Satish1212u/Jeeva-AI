@@ -6,7 +6,7 @@ import { aiRouter } from '../../ai/aiRouter.js';
 import { buildSystemPrompt } from '../../ai/prompts/systemPrompts.js';
 import { medicineService } from '../../medical/medicines/medicineService.js';
 import { IntentRouter } from '../../ai/router.js';
-import { detectLanguage, SupportedLanguage } from '../../utils/language.js';
+import { detectLanguageWithConfidence, SupportedLanguage } from '../../utils/language.js';
 import { Relationship } from '@prisma/client';
 import { startProcessing, stopProcessing } from '../processingIndicator.js';
 import { logger } from '../../utils/logger.js';
@@ -48,6 +48,7 @@ export class MessageHandler {
   ): Promise<void> {
     const startTime = Date.now();
     let currentLang: SupportedLanguage = 'en';
+    let responseSent = false;
 
     try {
       logger.info(
@@ -56,6 +57,10 @@ export class MessageHandler {
       );
 
       const trimmed = text.trim();
+
+      // Detect language of the CURRENT message immediately
+      const detection = detectLanguageWithConfidence(trimmed);
+      currentLang = detection.language;
 
       // 1. Handle Slash Commands
       if (trimmed.startsWith('/')) {
@@ -89,6 +94,7 @@ export class MessageHandler {
             });
             break;
         }
+        responseSent = true;
         logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
         return;
       }
@@ -115,9 +121,10 @@ export class MessageHandler {
         };
       }
 
-      // Detect language or use user's saved preference
-      const detectedLang = detectLanguage(trimmed);
-      currentLang = (user?.preferredLanguage as SupportedLanguage) || detectedLang;
+      // If current message language could not be confidently detected, fall back to user's saved preference
+      if (!detection.isConfident && user?.preferredLanguage) {
+        currentLang = user.preferredLanguage as SupportedLanguage;
+      }
 
       // 3. Quick natural language check: Add family profile
       // Format: "Add Father: Ramesh, 58 yrs, B+"
@@ -137,6 +144,7 @@ export class MessageHandler {
           chat_id: chatId,
           text: `✅ Successfully created profile for *${newProfile.name}* (${newProfile.relationship}).\n\nUse /profile to switch active patient records.`
         });
+        responseSent = true;
         logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
         return;
       }
@@ -154,6 +162,7 @@ export class MessageHandler {
           chat_id: chatId,
           text: route.emergencyResponse
         });
+        responseSent = true;
         logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
         return;
       }
@@ -177,11 +186,13 @@ export class MessageHandler {
                   photo: medResult.verifiedProductImage,
                   caption: medResult.formattedTelegramText
                 });
+                responseSent = true;
               } else {
                 await telegramBot.sendMessage({
                   chat_id: chatId,
                   text: medResult.formattedTelegramText
                 });
+                responseSent = true;
               }
               logger.info({ lifecycle: 'telegram_send_completed', chatId }, 'telegram_send_completed');
               logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
@@ -194,8 +205,14 @@ export class MessageHandler {
             logger.error({ lifecycle: 'request_failed', err: medErr.message, chatId }, 'Error in medicine lookup.');
             await telegramBot.sendMessage({
               chat_id: chatId,
-              text: 'I could not retrieve the requested medicine information right now. Please verify the name or consult a licensed pharmacist.'
+              text:
+                currentLang === 'hi'
+                  ? '⚠️ मैं अभी इस दवा की जानकारी प्राप्त नहीं कर सका। कृपया नाम की जांच करें या किसी फार्मासिस्ट से परामर्श लें।'
+                  : currentLang === 'hinglish'
+                  ? '⚠️ Main abhi is medicine ki information retrieve nahi kar paaya. Kripya naam verify karein ya licensed pharmacist se consult karein.'
+                  : '⚠️ I could not retrieve the requested medicine information right now. Please verify the name or consult a licensed pharmacist.'
             });
+            responseSent = true;
             return;
           }
         }
@@ -204,6 +221,7 @@ export class MessageHandler {
       // 6. Doctor Summary Intent via natural text
       if (route.intent === 'DOCTOR_SUMMARY') {
         await CommandHandler.handleSummary(chatId, userMeta.id);
+        responseSent = true;
         logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
         return;
       }
@@ -313,6 +331,7 @@ export class MessageHandler {
         chat_id: chatId,
         text: routeResult.guardResult.content
       });
+      responseSent = true;
       logger.info({ lifecycle: 'telegram_send_completed', chatId }, 'telegram_send_completed');
 
       logger.info({ lifecycle: 'request_completed', chatId, latencyMs: Date.now() - startTime }, 'request_completed');
@@ -335,15 +354,18 @@ export class MessageHandler {
         // Ignore secondary stop error
       }
 
-      // Deliver localized, empathetic fallback message without internal details
-      const fallbackText = getLocalizedErrorMessage(currentLang);
-      try {
-        await telegramBot.sendMessage({
-          chat_id: chatId,
-          text: fallbackText
-        });
-      } catch (sendErr: any) {
-        logger.error({ err: sendErr.message, chatId }, 'Critical: Failed to send fallback message to Telegram user.');
+      // Deliver localized, empathetic fallback message if no response has been sent yet
+      if (!responseSent) {
+        const fallbackText = getLocalizedErrorMessage(currentLang);
+        try {
+          await telegramBot.sendMessage({
+            chat_id: chatId,
+            text: fallbackText
+          });
+          responseSent = true;
+        } catch (sendErr: any) {
+          logger.error({ err: sendErr.message, chatId }, 'Critical: Failed to send fallback message to Telegram user.');
+        }
       }
     } finally {
       // Guaranteed cleanup on success, error, or early return

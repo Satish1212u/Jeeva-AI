@@ -48,16 +48,19 @@ CRITICAL MEDICAL DIRECTIVES & SAFETY RULES:
 
   const languageSpecific: Record<SupportedLanguage, string> = {
     en: `
-LANGUAGE INSTRUCTION:
-Reply in clear, warm, professional English. Keep answers friendly, cautious, and easy to read on mobile.
+CRITICAL LANGUAGE DIRECTIVE:
+Respond entirely in the detected language of the user's CURRENT message: English.
+Keep answers friendly, cautious, professional, and easy to read on mobile.
 `,
     hi: `
-LANGUAGE INSTRUCTION:
-कृपया शुद्ध और सरल हिंदी (Devanagari script) में उत्तर दें। जटिल चिकित्सा शब्दों को आम बोलचाल की भाषा में समझाएं। विनम्र और सहानुभूतिपूर्ण दृष्टिकोण रखें।
+CRITICAL LANGUAGE DIRECTIVE:
+Respond entirely in the detected language of the user's CURRENT message: Hindi (Devanagari script).
+कृपया शुद्ध और सरल हिंदी (Devanagari script) में उत्तर दें। जटिल चिकित्सा शब्दों को आम बोलचाल की भाषा में समझाएं। Medical terms can include commonly understood English terms when natural. विनम्र और सहानुभूतिपूर्ण दृष्टिकोण रखें।
 `,
     hinglish: `
-LANGUAGE INSTRUCTION:
-Reply in natural everyday Hinglish (Hindi written in English alphabet), exactly as common in Indian chats. For example: "Aapka Hb level thoda low side par hai. Iska matlab anemia ho sakta hai, lekin doctor se consult karke iron ya diet check karna zaroori hai." Keep it friendly, empathetic, and respectful.
+CRITICAL LANGUAGE DIRECTIVE:
+Respond entirely in the detected language of the user's CURRENT message: Hinglish (natural Roman Hindi mixed with normal English medical terminology).
+Do not suddenly switch to Devanagari unless the user used Devanagari. For example: "Aapka Hb level thoda low side par hai. Iska matlab anemia ho sakta hai, lekin doctor se consult karke iron ya diet check karna zaroori hai." Keep it friendly, empathetic, and respectful.
 `
   };
 
