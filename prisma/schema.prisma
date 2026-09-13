@@ -1,0 +1,215 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Relationship {
+  SELF
+  FATHER
+  MOTHER
+  SPOUSE
+  CHILD
+  SIBLING
+  OTHER
+}
+
+enum DocumentCategory {
+  LAB_REPORT
+  PRESCRIPTION
+  DISCHARGE_SUMMARY
+  MEDICAL_DOCUMENT
+  OTHER
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum LabFlag {
+  NORMAL
+  HIGH
+  LOW
+  ABNORMAL
+  CRITICAL
+}
+
+enum MedicationStatus {
+  ACTIVE
+  PAUSED
+  DISCONTINUED
+}
+
+model User {
+  id                String          @id @default(uuid())
+  telegramId        BigInt          @unique
+  displayName       String?
+  username          String?
+  preferredLanguage String          @default("en") // "en", "hi", "hinglish"
+  activeProfileId   String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  lastActiveAt      DateTime        @default(now())
+
+  familyProfiles    FamilyProfile[]
+  conversations     Conversation[]
+  documents         MedicalDocument[]
+  consents          Consent[]
+
+  @@index([telegramId])
+  @@index([lastActiveAt])
+}
+
+model FamilyProfile {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  relationship    Relationship   @default(SELF)
+  dateOfBirth     DateTime?
+  gender          String?        // "male", "female", "other"
+  bloodGroup      String?        // "A+", "B+", "O+", "AB+", "A-", "B-", "O-", "AB-"
+  allergies       String[]       @default([])
+  knownConditions String[]       @default([])
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  medications     Medication[]
+  healthEvents    HealthEvent[]
+  labResults      LabResult[]
+  documents       MedicalDocument[]
+  conversations   Conversation[]
+
+  @@index([userId])
+}
+
+model Conversation {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyProfileId String?
+  familyProfile   FamilyProfile? @relation(fields: [familyProfileId], references: [id], onDelete: SetNull)
+  title           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  messages        Message[]
+
+  @@index([userId])
+  @@index([familyProfileId])
+  @@index([updatedAt])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  tokens         Int?
+  metadata       Json?        // Safety flags, source citations, document refs
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model MedicalDocument {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyProfileId String?
+  familyProfile   FamilyProfile?   @relation(fields: [familyProfileId], references: [id], onDelete: SetNull)
+  category        DocumentCategory @default(MEDICAL_DOCUMENT)
+  originalName    String
+  mimeType        String
+  fileSize        Int
+  storagePath     String
+  extractedText   String?
+  structuredData  Json?            // Structured JSON extracted by OCR/LLM
+  isProcessed     Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  labResults      LabResult[]
+
+  @@index([userId])
+  @@index([familyProfileId])
+  @@index([category])
+}
+
+model LabResult {
+  id              String           @id @default(uuid())
+  documentId      String?
+  document        MedicalDocument? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  familyProfileId String
+  familyProfile   FamilyProfile    @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  testName        String
+  category        String?          // e.g. "Complete Blood Count", "Lipid Panel", "Metabolic"
+  value           String
+  numericValue    Float?
+  unit            String?
+  referenceRange  String?
+  flag            LabFlag          @default(NORMAL)
+  interpretation  String?
+  observedAt      DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+
+  @@index([familyProfileId])
+  @@index([testName])
+  @@index([observedAt])
+}
+
+model Medication {
+  id              String           @id @default(uuid())
+  familyProfileId String
+  familyProfile   FamilyProfile    @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  name            String
+  genericName     String?
+  dosage          String?          // e.g., "500mg"
+  frequency       String?          // e.g., "Once daily after meals"
+  duration        String?          // e.g., "7 days"
+  status          MedicationStatus @default(ACTIVE)
+  prescribedBy    String?
+  startDate       DateTime?
+  endDate         DateTime?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([familyProfileId])
+  @@index([status])
+}
+
+model HealthEvent {
+  id              String        @id @default(uuid())
+  familyProfileId String
+  familyProfile   FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  title           String        // e.g. "Diagnosed with Type 2 Diabetes", "Knee Arthroscopy"
+  description     String?
+  category        String?       // "DIAGNOSIS", "SURGERY", "VACCINE", "SYMPTOM_EPISODE"
+  eventDate       DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+
+  @@index([familyProfileId])
+  @@index([eventDate])
+}
+
+model Consent {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consentType String   // "TERMS_AND_DISCLAIMER", "DATA_PROCESSING", "HEALTH_INFORMATION"
+  granted     Boolean  @default(true)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}

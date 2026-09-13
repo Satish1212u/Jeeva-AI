@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Build output
+dist/
+build/
+.vite/
+.next/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local uploads / medical documents
+uploads/
+storage/
+tmp/
+temp/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime
+*.pid
+*.seed
+
+# Local configuration
+*.local
+
+# Prisma Studio / generated local artifacts
+prisma/.cache/
+
+# Render / Vercel local files
+.vercel/
+
+# Misc
+*.bak
+*.tmp
