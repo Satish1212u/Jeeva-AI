@@ -1,10 +1,10 @@
 services:
   - type: web
-    name: medai-service
+    name: jeeva-ai
     env: node
-    plan: standard
+    plan: free
     buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start
+    startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -12,19 +12,39 @@ services:
         value: production
       - key: PORT
         value: 10000
+
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_WEBHOOK_SECRET
         sync: false
-      - key: OPENAI_API_KEY
+
+      - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_PRIMARY_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_FAST_MODEL
+        value: gemini-2.5-flash-lite
+
+      - key: GROK_API_KEY
+        sync: false
+      - key: GROK_MODEL
+        value: grok-4.6
+
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openrouter/free
+
+      - key: AI_REQUEST_TIMEOUT_MS
+        value: "30000"
+
       - key: DATABASE_URL
         fromDatabase:
-          name: medai-postgres
+          name: jeeva-postgres
           property: connectionString
 
 databases:
-  - name: medai-postgres
-    plan: standard
+  - name: jeeva-postgres
+    plan: free
     databaseName: medai
     user: medai_user
