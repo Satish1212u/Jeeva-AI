@@ -40,7 +40,8 @@ describe('UserService & ConversationService', () => {
   });
 
   it('should manage bounded conversation history within limits', async () => {
-    const conv = await ConversationService.getOrCreateActiveConversation('user_123');
+    const user = await UserService.getOrCreateUser({ telegramId: testTelegramId });
+    const conv = await ConversationService.getOrCreateActiveConversation(user.id);
     expect(conv.id).toBeDefined();
 
     // Append 15 messages

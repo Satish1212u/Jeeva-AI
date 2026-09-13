@@ -89,6 +89,17 @@ export class ConversationService {
         take: MAX_HISTORY_MESSAGES
       });
 
+      if (messages.length === 0) {
+        const memList = this.memoryConversations.get(conversationId);
+        if (memList && memList.length > 0) {
+          const sliced = memList.slice(-MAX_HISTORY_MESSAGES);
+          return sliced.map((m) => ({
+            role: m.role.toLowerCase() as 'system' | 'user' | 'assistant',
+            content: m.content
+          }));
+        }
+      }
+
       // Reverse so messages are chronological (oldest to newest)
       return messages.reverse().map((m) => ({
         role: m.role.toLowerCase() as 'system' | 'user' | 'assistant',
