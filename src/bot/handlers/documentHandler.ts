@@ -6,6 +6,7 @@ import { PrescriptionParser } from '../../medical/prescriptions/prescriptionPars
 import { UserService } from '../../users/userService.js';
 import { prisma } from '../../database/prisma.js';
 import { logger } from '../../utils/logger.js';
+import { startProcessing, updateProcessing, stopProcessing, ProcessingType } from '../processingIndicator.js';
 import { DocumentCategory, LabFlag } from '@prisma/client';
 
 export class DocumentHandler {
@@ -23,10 +24,20 @@ export class DocumentHandler {
     // Largest photo is last in array
     const bestPhoto = photos[photos.length - 1];
 
-    await telegramBot.sendMessage({
-      chat_id: chatId,
-      text: '⏳ *Analyzing your medical image...*\nValidating file and reading parameters.'
-    });
+    const isRx =
+      caption?.toLowerCase().includes('prescription') ||
+      caption?.toLowerCase().includes('rx');
+    const isMed =
+      caption?.toLowerCase().includes('medicine') ||
+      caption?.toLowerCase().includes('dawa') ||
+      caption?.toLowerCase().includes('tablet');
+    const isReport =
+      caption?.toLowerCase().includes('report') ||
+      caption?.toLowerCase().includes('lab') ||
+      caption?.toLowerCase().includes('blood');
+
+    const initialType: ProcessingType = isRx ? 'prescription' : isMed ? 'medicine' : isReport ? 'report' : 'image';
+    await startProcessing(chatId, initialType);
 
     await this.processUploadedFile({
       chat_id: chatId,
@@ -55,7 +66,7 @@ export class DocumentHandler {
     if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
       return telegramBot.sendMessage({
         chat_id: chatId,
-        text: `❌ *Unsupported File Format*\n\nMedAI supports *PDF, JPG, JPEG, and PNG*.\nReceived: \`${mimeType}\`.`
+        text: `❌ *Unsupported File Format*\n\nJeeva AI supports *PDF, JPG, JPEG, and PNG*.\nReceived: \`${mimeType}\`.`
       });
     }
 
@@ -66,10 +77,14 @@ export class DocumentHandler {
       });
     }
 
-    await telegramBot.sendMessage({
-      chat_id: chatId,
-      text: '⏳ *Processing your medical document...*\nPlease allow a few moments for secure extraction.'
-    });
+    const isRx =
+      originalName.toLowerCase().includes('rx') ||
+      originalName.toLowerCase().includes('prescription') ||
+      caption?.toLowerCase().includes('prescription') ||
+      caption?.toLowerCase().includes('rx');
+
+    const initialType: ProcessingType = isRx ? 'prescription' : 'report';
+    await startProcessing(chatId, initialType);
 
     await this.processUploadedFile({
       chat_id: chatId,
@@ -117,6 +132,7 @@ export class DocumentHandler {
       let textToAnalyze = caption && caption.length > 5 ? `${caption}\n` : '';
 
       if (mimeType.startsWith('image/')) {
+        await updateProcessing(chat_id, '🖼️ Analyzing the image...');
         try {
           const visionRes = await aiRouter.execute({
             requestType: 'image_request',
@@ -151,11 +167,19 @@ export class DocumentHandler {
 
       if (isPrescription) {
         category = DocumentCategory.PRESCRIPTION;
+        await updateProcessing(chat_id, '💊 Reading the prescription...');
         const parsedRx = PrescriptionParser.parsePrescriptionText(textToAnalyze);
+        await updateProcessing(chat_id, '🔎 Identifying readable medicines...');
+        if (parsedRx.unclearSegmentsFound) {
+          await updateProcessing(chat_id, '⚠️ Checking unclear text...');
+        }
         replyMessage = PrescriptionParser.formatPrescriptionForTelegram(parsedRx);
       } else {
         category = DocumentCategory.LAB_REPORT;
+        await updateProcessing(chat_id, '📄 Reading your report...');
         const parsedReport = ReportParser.parseReportText(textToAnalyze);
+        await updateProcessing(chat_id, '🔎 Checking the reported values...');
+        await updateProcessing(chat_id, '🧠 Preparing a clear explanation...');
         replyMessage = ReportParser.formatReportForTelegram(parsedReport);
 
         // Store extracted lab parameters in database if available
@@ -201,16 +225,22 @@ export class DocumentHandler {
         logger.warn({ dbErr }, 'Non-fatal: could not create MedicalDocument row.');
       }
 
+      // Stop processing and delete temporary status indicator before sending final response
+      await stopProcessing(chat_id);
+
       await telegramBot.sendMessage({
         chat_id,
         text: replyMessage
       });
     } catch (err: any) {
-      logger.error({ err }, 'Error processing uploaded medical document.');
+      await stopProcessing(chat_id);
+      logger.error({ err: err.message, chat_id }, 'Error processing uploaded medical document.');
       await telegramBot.sendMessage({
         chat_id,
-        text: `❌ *Error Processing Document*\n\n${err.message || 'An unexpected error occurred while analyzing the file. Please ensure the document is clear and legible.'}`
+        text: '❌ *Error Processing Document*\n\nJeeva AI encountered an issue while analyzing the file. Please ensure the document is clear and legible, or consult your healthcare provider.'
       });
+    } finally {
+      await stopProcessing(chat_id);
     }
   }
 }

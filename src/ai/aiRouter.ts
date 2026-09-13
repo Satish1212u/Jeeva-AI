@@ -129,6 +129,12 @@ export class AIRouter {
             ? await currentProvider.generateVision!(request)
             : await currentProvider.generateText(request);
 
+          // If provider returned empty content, whitespace-only, or invalid response:
+          // treat it as provider failure and continue fallback cascade
+          if (!response || typeof response.content !== 'string' || !response.content.trim()) {
+            throw new Error(`Provider ${currentProvider.name} returned an empty or invalid response.`);
+          }
+
           const latencyMs = Date.now() - startTime;
 
           // Record provider success
@@ -242,7 +248,7 @@ export class AIRouter {
 
     return {
       provider: providerName,
-      isTransient: status >= 500 || /timeout|econnreset/i.test(message),
+      isTransient: status >= 500 || /timeout|econnreset|empty or invalid/i.test(message),
       isRateLimit: status === 429 || /rate limit|quota/i.test(message),
       isAuthError: status === 401 || status === 403 || /unauthorized|api key/i.test(message),
       statusCode: status,

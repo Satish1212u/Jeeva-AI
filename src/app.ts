@@ -5,6 +5,7 @@ import { MessageHandler } from './bot/handlers/messageHandler.js';
 import { DocumentHandler } from './bot/handlers/documentHandler.js';
 import { CallbackHandler } from './bot/handlers/callbackHandler.js';
 import { providerHealth } from './ai/providerHealth.js';
+import { telegramBot } from './bot/telegramBot.js';
 
 export const app = express();
 
@@ -79,12 +80,16 @@ app.post('/webhook/telegram', async (req: Request, res: Response): Promise<void>
 
   const update = req.body;
 
-  // Telegram expects 200 OK fast; process update
+  // Telegram expects 200 OK fast; acknowledge receipt
   res.status(200).json({ ok: true });
 
   if (!update || typeof update !== 'object') {
     return;
   }
+
+  // Track chat ID for fallback delivery if an unexpected error escapes handlers
+  const knownChatId: number | string | undefined =
+    update.message?.chat?.id || update.callback_query?.message?.chat?.id;
 
   try {
     // A. Handle Callback Queries (inline keyboard button clicks)
@@ -126,7 +131,30 @@ app.post('/webhook/telegram', async (req: Request, res: Response): Promise<void>
       }
     }
   } catch (error: any) {
-    logger.error({ err: error.message, stack: error.stack }, 'Error processing Telegram update.');
+    logger.error(
+      {
+        lifecycle: 'request_failed',
+        chatId: knownChatId,
+        errName: error?.name,
+        errMsg: error?.message
+      },
+      'Unhandled error processing Telegram update in webhook.'
+    );
+
+    // Send fallback message so user never experiences silent failure
+    if (knownChatId) {
+      try {
+        await telegramBot.sendMessage({
+          chat_id: knownChatId,
+          text: "⚠️ Jeeva AI couldn't complete that request right now.\nPlease try again in a moment."
+        });
+      } catch (sendErr: any) {
+        logger.error(
+          { err: sendErr.message, chatId: knownChatId },
+          'Failed to send webhook error fallback message to Telegram user.'
+        );
+      }
+    }
   }
 });
 

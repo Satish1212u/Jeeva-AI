@@ -39,42 +39,175 @@ export class TelegramBotClient {
     });
   }
 
+  private get isSimulated(): boolean {
+    return this.token.includes('dummy') || this.token.includes('test') || process.env.NODE_ENV === 'test';
+  }
+
   /**
-   * Send a text message to a Telegram chat
+   * Send a text message to a Telegram chat with automatic retry and markdown fallback
    */
   public async sendMessage(options: SendMessageOptions): Promise<boolean> {
+    // Never attempt to send an empty or whitespace-only message
+    const trimmed = options.text?.trim();
+    const safeText = trimmed && trimmed.length > 0
+      ? options.text
+      : '⚠️ I processed your request, but cannot display an empty message. Please try asking your question again.';
+
+    if (this.isSimulated) {
+      logger.info({ options: { ...options, text: safeText } }, 'Telegram dummy client: message sent (simulated).');
+      return true;
+    }
+
+    const payload = {
+      chat_id: options.chat_id,
+      text: safeText,
+      parse_mode: options.parse_mode ?? 'Markdown',
+      reply_markup: options.reply_markup
+    };
+
+    // Attempt 1: Try with preferred parse_mode
     try {
-      // In dev/test with dummy token, log and succeed without failing
-      if (this.token.includes('dummy') || this.token.includes('test')) {
-        logger.info({ options }, 'Telegram dummy client: message sent (simulated).');
+      await this.http.post('/sendMessage', payload);
+      return true;
+    } catch (err: any) {
+      const errMsg = err.response?.data?.description || err.message;
+      logger.warn(
+        { err: errMsg, chatId: options.chat_id },
+        'Telegram sendMessage attempt 1 failed; retrying without parse_mode.'
+      );
+
+      // Attempt 2: Retry without parse_mode (handles Markdown syntax parsing errors)
+      try {
+        await this.http.post('/sendMessage', {
+          ...payload,
+          parse_mode: undefined
+        });
+        return true;
+      } catch (retryErr: any) {
+        const retryErrMsg = retryErr.response?.data?.description || retryErr.message;
+        logger.error(
+          { err: retryErrMsg, chatId: options.chat_id },
+          'Telegram sendMessage attempt 2 failed.'
+        );
+        return false;
+      }
+    }
+  }
+
+  /**
+   * Send a text message and return the Telegram message_id (useful for temporary status messages)
+   */
+  public async sendMessageWithId(options: SendMessageOptions): Promise<number | null> {
+    const trimmed = options.text?.trim();
+    const safeText = trimmed && trimmed.length > 0
+      ? options.text
+      : '🧠 Jeeva AI is thinking...';
+
+    if (this.isSimulated) {
+      logger.info({ options: { ...options, text: safeText } }, 'Telegram dummy client: message sent with simulated ID.');
+      return Math.floor(Math.random() * 900000) + 100000;
+    }
+
+    const payload = {
+      chat_id: options.chat_id,
+      text: safeText,
+      parse_mode: options.parse_mode ?? 'Markdown',
+      reply_markup: options.reply_markup
+    };
+
+    try {
+      const res = await this.http.post('/sendMessage', payload);
+      return res.data?.result?.message_id ?? null;
+    } catch (err: any) {
+      const errMsg = err.response?.data?.description || err.message;
+      logger.warn(
+        { err: errMsg, chatId: options.chat_id },
+        'Failed to send Telegram message with ID on attempt 1; retrying without parse_mode.'
+      );
+      try {
+        const res = await this.http.post('/sendMessage', {
+          ...payload,
+          parse_mode: undefined
+        });
+        return res.data?.result?.message_id ?? null;
+      } catch (retryErr: any) {
+        logger.error(
+          { err: retryErr.response?.data?.description || retryErr.message, chatId: options.chat_id },
+          'Failed to send Telegram message with ID on attempt 2.'
+        );
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Send chat action (e.g. 'typing', 'upload_photo', 'upload_document')
+   */
+  public async sendChatAction(
+    chatId: number | string,
+    action: 'typing' | 'upload_photo' | 'upload_document' = 'typing'
+  ): Promise<boolean> {
+    try {
+      if (this.isSimulated) {
         return true;
       }
 
-      await this.http.post('/sendMessage', {
-        chat_id: options.chat_id,
-        text: options.text,
-        parse_mode: options.parse_mode ?? 'Markdown',
-        reply_markup: options.reply_markup
+      await this.http.post('/sendChatAction', {
+        chat_id: chatId,
+        action
       });
       return true;
     } catch (err: any) {
-      logger.error(
-        { err: err.response?.data || err.message, chatId: options.chat_id },
-        'Failed to send Telegram message.'
-      );
-      // Fallback without parse_mode if markdown parsing failed
-      if (options.parse_mode) {
-        try {
-          await this.http.post('/sendMessage', {
-            chat_id: options.chat_id,
-            text: options.text,
-            reply_markup: options.reply_markup
-          });
-          return true;
-        } catch {
-          return false;
-        }
+      logger.warn({ err: err.response?.data || err.message, chatId, action }, 'Failed to send chat action.');
+      return false;
+    }
+  }
+
+  /**
+   * Edit text of an existing message
+   */
+  public async editMessageText(
+    chatId: number | string,
+    messageId: number,
+    text: string,
+    parseMode?: 'Markdown' | 'HTML'
+  ): Promise<boolean> {
+    try {
+      if (this.isSimulated) {
+        logger.info({ chatId, messageId, text }, 'Telegram dummy client: message edited (simulated).');
+        return true;
       }
+
+      await this.http.post('/editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text,
+        parse_mode: parseMode ?? 'Markdown'
+      });
+      return true;
+    } catch (err: any) {
+      logger.warn({ err: err.response?.data || err.message, chatId, messageId }, 'Failed to edit message text.');
+      return false;
+    }
+  }
+
+  /**
+   * Delete a message by message_id
+   */
+  public async deleteMessage(chatId: number | string, messageId: number): Promise<boolean> {
+    try {
+      if (this.isSimulated) {
+        logger.info({ chatId, messageId }, 'Telegram dummy client: message deleted (simulated).');
+        return true;
+      }
+
+      await this.http.post('/deleteMessage', {
+        chat_id: chatId,
+        message_id: messageId
+      });
+      return true;
+    } catch (err: any) {
+      logger.warn({ err: err.response?.data || err.message, chatId, messageId }, 'Failed to delete message.');
       return false;
     }
   }
@@ -84,7 +217,7 @@ export class TelegramBotClient {
    */
   public async sendPhoto(options: SendPhotoOptions): Promise<boolean> {
     try {
-      if (this.token.includes('dummy') || this.token.includes('test')) {
+      if (this.isSimulated) {
         logger.info({ options }, 'Telegram dummy client: photo sent (simulated).');
         return true;
       }
@@ -111,7 +244,7 @@ export class TelegramBotClient {
    */
   public async answerCallbackQuery(callbackQueryId: string, text?: string): Promise<boolean> {
     try {
-      if (this.token.includes('dummy') || this.token.includes('test')) {
+      if (this.isSimulated) {
         return true;
       }
 
@@ -131,7 +264,7 @@ export class TelegramBotClient {
    */
   public async downloadFile(fileId: string): Promise<{ buffer: Buffer; filePath: string }> {
     try {
-      if (this.token.includes('dummy') || this.token.includes('test')) {
+      if (this.isSimulated) {
         return {
           buffer: Buffer.from('Simulated file content for testing.'),
           filePath: 'documents/dummy_test_report.pdf'

@@ -21,11 +21,47 @@ export class ResponseGuard {
       };
     }
 
-    // Run core SafetyEngine post-processing
-    const processed = SafetyEngine.postProcessResponse(rawOutput, lang);
+    // Filter out internal chain-of-thought, token reasoning, and private prompt artifacts
+    let sanitized = rawOutput;
+    const violations: string[] = [];
 
-    let sanitized = processed.sanitizedText;
-    const violations = [...processed.warnings];
+    // Strip <thought>...</thought>, <think>...</think>, <reasoning>...</reasoning>
+    const thoughtTagRegex = /<(?:thought|think|reasoning)>[\s\S]*?<\/(?:thought|think|reasoning)>/gi;
+    if (thoughtTagRegex.test(sanitized)) {
+      sanitized = sanitized.replace(thoughtTagRegex, '').trim();
+      violations.push('INTERNAL_CHAIN_OF_THOUGHT_STRIPPED');
+    }
+
+    // Strip ```thought ... ``` or ```thinking ... ``` blocks
+    const thoughtBlockRegex = /```(?:thought|thinking|reasoning)[\s\S]*?```/gi;
+    if (thoughtBlockRegex.test(sanitized)) {
+      sanitized = sanitized.replace(thoughtBlockRegex, '').trim();
+      violations.push('INTERNAL_THOUGHT_BLOCK_STRIPPED');
+    }
+
+    // Strip [Internal Reasoning: ...] or [Chain of Thought: ...]
+    const bracketReasoningRegex = /\[(?:internal reasoning|chain of thought|model thought|reasoning):[\s\S]*?\]/gi;
+    if (bracketReasoningRegex.test(sanitized)) {
+      sanitized = sanitized.replace(bracketReasoningRegex, '').trim();
+      violations.push('INTERNAL_REASONING_BRACKET_STRIPPED');
+    }
+
+    // Strip API keys, environment secrets, and raw internal provider error traces
+    const leakRegex = /(?:GEMINI_API_KEY|GROK_API_KEY|OPENROUTER_API_KEY|TELEGRAM_BOT_TOKEN|System instructions:|Provider internal error:|AxiosError:|GoogleGenerativeAIError:)[^\n]*/gi;
+    if (leakRegex.test(sanitized)) {
+      sanitized = sanitized.replace(leakRegex, '').trim();
+      violations.push('INTERNAL_API_LEAK_STRIPPED');
+    }
+
+    if (!sanitized) {
+      sanitized = 'I have processed your medical question. Please let me know how I can further assist you.';
+    }
+
+    // Run core SafetyEngine post-processing
+    const processed = SafetyEngine.postProcessResponse(sanitized, lang);
+
+    sanitized = processed.sanitizedText;
+    violations.push(...processed.warnings);
 
     // Additional specific guardrail: fake clinical confirmation of imaging
     const imagingConfirmationRegex = /\b(this image confirms|the x-ray definitively shows|radiology proves|mri diagnostic)\b/gi;
